@@ -232,8 +232,21 @@ function profitOperationIs_(operation, expected) {
   return profitCleanText_(operation).toLowerCase() === profitCleanText_(expected).toLowerCase();
 }
 
-/** @param {*} value Value. @return {string} Text. @private */
-function profitCleanText_(value) { return String(value === null || value === undefined ? '' : value).trim(); }
+/**
+ * Produces a stable value for comparisons and group keys. Google Sheets can
+ * contain non-breaking or zero-width spaces after copy/paste; they must not
+ * make the same project or direction look like a different value.
+ *
+ * @param {*} value Value.
+ * @return {string} Normalized text.
+ * @private
+ */
+function profitCleanText_(value) {
+  return String(value === null || value === undefined ? '' : value)
+      .replace(/[\u00A0\u200B\uFEFF]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+}
 
 /** @param {Object} request Request. @param {Array<Object>} rows Rows. @return {Object} Period. @private */
 function profitResolvePeriod_(request, rows) {
