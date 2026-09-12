@@ -444,13 +444,21 @@ function prepareResponse(obj) {
 }
 
 /**
- * API contract stub for the money module.
+ * Unified API entry point for the money module.
  *
  * @param {Object=} params Module parameters reserved for future use.
  * @return {{status: string, data: Object|null, error: string|null}} API response.
  */
 function apiMoney(params) {
-  return createModuleStubResponse_('money', params);
+  try {
+    if (typeof cashGetMoneyData !== 'function') {
+      return createErrorResponse('Модуль «Деньги» не подключен. Проверьте файл gsmoney.gs.');
+    }
+    return prepareResponse(cashGetMoneyData(params));
+  } catch (error) {
+    logError(error);
+    return createErrorResponse(error);
+  }
 }
 
 /**
@@ -464,13 +472,21 @@ function apiCapital(params) {
 }
 
 /**
- * API contract stub for the profit module.
+ * Unified API entry point for the profit module.
  *
  * @param {Object=} params Module parameters reserved for future use.
  * @return {{status: string, data: Object|null, error: string|null}} API response.
  */
 function apiProfit(params) {
-  return createModuleStubResponse_('profit', params);
+  try {
+    if (typeof profitGetProfitData !== 'function') {
+      return createErrorResponse('Модуль «Прибыль» не подключен. Проверьте файл gsprofit.gs.');
+    }
+    return prepareResponse(profitGetProfitData(params));
+  } catch (error) {
+    logError(error);
+    return createErrorResponse(error);
+  }
 }
 
 /**
