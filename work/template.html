@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --app-bg: #0f172a;
+        --app-surface: #111c31;
+        --app-surface-hover: #18253d;
+        --app-border: rgba(148, 163, 184, .16);
+        --app-text: #f8fafc;
+        --app-muted: #91a0b9;
+        --app-accent: #00d9ff;
+        --app-accent-soft: rgba(0, 217, 255, .12);
+        --app-orange: #ff9f1c;
+        --app-radius: 16px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { min-height: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--app-bg);
+        color: var(--app-text);
+        font-family: 'Inter', Arial, sans-serif;
+      }
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: 286px minmax(0, 1fr);
+        min-height: 100vh;
+        background:
+          linear-gradient(rgba(30, 48, 76, .25) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(30, 48, 76, .25) 1px, transparent 1px),
+          var(--app-bg);
+        background-size: 40px 40px;
+      }
+
+      .app-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+        min-height: 100vh;
+        padding: 30px 18px;
+        background: rgba(9, 18, 34, .9);
+        border-right: 1px solid var(--app-border);
+      }
+
+      .app-brand {
+        padding: 9px 12px;
+      }
+
+      .app-brand-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-bottom: 18px;
+        border-radius: 12px;
+        color: #00151a;
+        background: var(--app-accent);
+        box-shadow: 0 0 28px rgba(0, 217, 255, .25);
+        font-family: 'Manrope', sans-serif;
+        font-weight: 800;
+      }
+
+      .app-brand-title {
+        margin: 0;
+        font: 800 20px/1.28 'Manrope', sans-serif;
+        letter-spacing: -.02em;
+      }
+
+      .app-brand-subtitle {
+        margin: 10px 0 0;
+        color: var(--app-muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .app-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .app-nav-caption {
+        margin: 0 12px 8px;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+
+      .app-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 48px;
+        padding: 0 13px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        color: var(--app-muted);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+      }
+
+      .app-nav-link:hover {
+        color: var(--app-text);
+        background: var(--app-surface-hover);
+        transform: translateX(3px);
+      }
+
+      .app-nav-link.is-active {
+        color: var(--app-accent);
+        background: var(--app-accent-soft);
+        border-color: rgba(0, 217, 255, .22);
+      }
+
+      .app-nav-icon {
+        width: 19px;
+        height: 19px;
+        flex: 0 0 19px;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        fill: none;
+      }
+
+      .app-main { min-width: 0; }
+
+      .app-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 98px;
+        padding: 24px 42px;
+        border-bottom: 1px solid var(--app-border);
+        background: rgba(15, 23, 42, .72);
+        backdrop-filter: blur(14px);
+      }
+
+      .app-page-title {
+        margin: 0;
+        font: 800 clamp(22px, 2.2vw, 30px)/1.2 'Manrope', sans-serif;
+        letter-spacing: -.035em;
+      }
+
+      .app-page-kicker {
+        margin: 7px 0 0;
+        color: var(--app-muted);
+        font-size: 12px;
+      }
+
+      .app-actions { display: flex; gap: 10px; }
+
+      .app-action {
+        min-height: 40px;
+        padding: 0 15px;
+        border: 1px solid var(--app-border);
+        border-radius: 10px;
+        color: var(--app-text);
+        background: rgba(17, 28, 49, .78);
+        cursor: pointer;
+        font: 600 13px/1 'Inter', sans-serif;
+        transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+      }
+
+      .app-action:hover {
+        border-color: rgba(0, 217, 255, .45);
+        background: var(--app-accent-soft);
+        color: var(--app-accent);
+      }
+
+      .app-action--exit:hover {
+        border-color: rgba(255, 159, 28, .5);
+        background: rgba(255, 159, 28, .1);
+        color: var(--app-orange);
+      }
+
+      .app-content { padding: 42px; }
+
+      .app-page-placeholder {
+        display: grid;
+        min-height: 440px;
+        place-items: center;
+        padding: 32px;
+        border: 1px dashed rgba(0, 217, 255, .27);
+        border-radius: var(--app-radius);
+        background: linear-gradient(135deg, rgba(17, 28, 49, .84), rgba(17, 28, 49, .46));
+        text-align: center;
+      }
+
+      .app-placeholder-eyebrow {
+        margin: 0 0 10px;
+        color: var(--app-accent);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+      }
+
+      .app-placeholder-title {
+        margin: 0;
+        font: 800 clamp(24px, 3.5vw, 40px)/1.15 'Manrope', sans-serif;
+        letter-spacing: -.04em;
+      }
+
+      .app-placeholder-text {
+        max-width: 420px;
+        margin: 15px 0 0;
+        color: var(--app-muted);
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .app-toast {
+        position: fixed;
+        right: 28px;
+        bottom: 28px;
+        z-index: 10;
+        max-width: min(360px, calc(100vw - 40px));
+        padding: 13px 16px;
+        border: 1px solid rgba(0, 217, 255, .3);
+        border-radius: 10px;
+        color: var(--app-text);
+        background: #14233c;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, .28);
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: opacity .2s ease, transform .2s ease;
+      }
+
+      .app-toast.is-visible { opacity: 1; transform: translateY(0); }
+
+      @media (max-width: 768px) {
+        .app-shell { grid-template-columns: 88px minmax(0, 1fr); }
+        .app-sidebar { gap: 28px; padding: 24px 12px; }
+        .app-brand { padding: 5px 0; text-align: center; }
+        .app-brand-mark { margin-bottom: 0; }
+        .app-brand-title, .app-brand-subtitle, .app-nav-caption, .app-nav-label { display: none; }
+        .app-nav-link { justify-content: center; padding: 0; }
+        .app-nav-link:hover { transform: translateY(-2px); }
+        .app-topbar { min-height: 88px; padding: 20px 26px; }
+        .app-content { padding: 26px; }
+      }
+
+      @media (max-width: 480px) {
+        .app-shell { display: block; }
+        .app-sidebar {
+          display: flex;
+          min-height: auto;
+          padding: 10px 14px;
+          border-right: 0;
+          border-bottom: 1px solid var(--app-border);
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        .app-brand { padding: 0; }
+        .app-brand-mark { width: 34px; height: 34px; }
+        .app-nav { display: flex; gap: 3px; }
+        .app-nav-link { min-height: 36px; width: 36px; border-radius: 9px; }
+        .app-topbar { align-items: flex-start; min-height: auto; padding: 22px 18px; }
+        .app-page-kicker { display: none; }
+        .app-actions { gap: 6px; }
+        .app-action { min-height: 34px; padding: 0 9px; font-size: 11px; }
+        .app-content { padding: 18px; }
+        .app-page-placeholder { min-height: 330px; padding: 24px 18px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="app-sidebar" aria-label="Главное меню">
+        <div class="app-brand">
+          <div class="app-brand-mark" aria-hidden="true">Ф</div>
+          <p class="app-brand-title">Управление финансовым состоянием компании</p>
+          <p class="app-brand-subtitle">Управляй финансами легко</p>
+        </div>
+
+        <nav class="app-nav">
+          <p class="app-nav-caption">Разделы</p>
+          <a class="app-nav-link<?= currentPage === 'dashboard' ? ' is-active' : '' ?>" href="?page=dashboard" aria-current="<?= currentPage === 'dashboard' ? 'page' : 'false' ?>" title="Дэшборд">
+            <svg class="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+            <span class="app-nav-label">Дэшборд</span>
+          </a>
+          <a class="app-nav-link<?= currentPage === 'money' ? ' is-active' : '' ?>" href="?page=money" aria-current="<?= currentPage === 'money' ? 'page' : 'false' ?>" title="Деньги">
+            <svg class="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h3"></path></svg>
+            <span class="app-nav-label">Деньги</span>
+          </a>
+          <a class="app-nav-link<?= currentPage === 'capital' ? ' is-active' : '' ?>" href="?page=capital" aria-current="<?= currentPage === 'capital' ? 'page' : 'false' ?>" title="Капитал">
+            <svg class="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m8 10V5m8 14v-7"></path><path d="M2 19h20"></path></svg>
+            <span class="app-nav-label">Капитал</span>
+          </a>
+          <a class="app-nav-link<?= currentPage === 'profit' ? ' is-active' : '' ?>" href="?page=profit" aria-current="<?= currentPage === 'profit' ? 'page' : 'false' ?>" title="Прибыль">
+            <svg class="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17 10 11l4 4 6-8"></path><path d="M16 7h4v4"></path></svg>
+            <span class="app-nav-label">Прибыль</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="app-topbar">
+          <div>
+            <h1 class="app-page-title"><?= pageTitle ?></h1>
+            <p class="app-page-kicker">Управление финансовым состоянием компании</p>
+          </div>
+          <div class="app-actions" aria-label="Действия">
+            <button class="app-action" type="button" data-placeholder="Обновление данных будет добавлено на следующем этапе.">Обновить</button>
+            <button class="app-action" type="button" data-placeholder="Настройки будут добавлены позже.">Настройки</button>
+            <button class="app-action app-action--exit" type="button" data-placeholder="Действие «Выход» пока является заглушкой.">Выход</button>
+          </div>
+        </header>
+
+        <section class="app-content" aria-label="Содержимое страницы">
+          <?!= include(pageFile); ?>
+        </section>
+      </main>
+    </div>
+
+    <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
+    <script>
+      (function () {
+        var toast = document.getElementById('app-toast');
+        var timeoutId;
+
+        document.querySelectorAll('[data-placeholder]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            window.clearTimeout(timeoutId);
+            toast.textContent = button.dataset.placeholder;
+            toast.classList.add('is-visible');
+            timeoutId = window.setTimeout(function () {
+              toast.classList.remove('is-visible');
+            }, 3000);
+          });
+        });
+      }());
+    </script>
+  </body>
+</html>
