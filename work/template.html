@@ -285,10 +285,54 @@
     <script>
       // Shared across every page so client scripts never build a link
       // against the temporary googleusercontent.com sandbox URL (see doGet()
-      // in gstemplate.gs), and so the period picked on "Дэшборд" can be
-      // read back on "Деньги"/"Капитал"/"Прибыль" after navigation.
+      // in gstemplate.gs), and so the period picked on any page ("Дэшборд",
+      // "Деньги", "Капитал", "Прибыль") is the same on every other page.
+      // The period from the URL (?start=&end=) wins when present; otherwise
+      // it falls back to the last period saved to localStorage, so a period
+      // changed on a child page (which does not reload the page) is not
+      // lost when navigating to another tab.
       window.APP_SCRIPT_URL = '<?!= scriptUrl ?>';
-      window.APP_PERIOD = { start: '<?!= periodStart ?>', end: '<?!= periodEnd ?>' };
+      window.APP_PERIOD_STORAGE_KEY = 'financeDashboardPeriod';
+      (function () {
+        var urlPeriod = { start: '<?!= periodStart ?>', end: '<?!= periodEnd ?>' };
+        var storedPeriod = null;
+        try {
+          storedPeriod = JSON.parse(localStorage.getItem(window.APP_PERIOD_STORAGE_KEY) || 'null');
+        } catch (e) { storedPeriod = null; }
+
+        var period = (urlPeriod.start || urlPeriod.end) ? urlPeriod : (storedPeriod || { start: '', end: '' });
+        window.APP_PERIOD = period;
+        try { localStorage.setItem(window.APP_PERIOD_STORAGE_KEY, JSON.stringify(period)); } catch (e) {}
+
+        function periodQuery(p) {
+          var q = '';
+          if (p && p.start) { q += '&start=' + encodeURIComponent(p.start); }
+          if (p && p.end) { q += '&end=' + encodeURIComponent(p.end); }
+          return q;
+        }
+        function refreshNavLinks(p) {
+          var query = periodQuery(p);
+          document.querySelectorAll('.app-nav-link').forEach(function (link) {
+            var href = (link.getAttribute('href') || '').split('&start=')[0].split('&end=')[0];
+            link.setAttribute('href', href + query);
+          });
+        }
+        // Called by every page when the user applies a period, so that
+        // navigation links to other tabs immediately carry the new period
+        // even though applying a period on a child page does not reload it.
+        window.APP_SAVE_PERIOD = function (start, end) {
+          var p = { start: start || '', end: end || '' };
+          window.APP_PERIOD = p;
+          try { localStorage.setItem(window.APP_PERIOD_STORAGE_KEY, JSON.stringify(p)); } catch (e) {}
+          refreshNavLinks(p);
+        };
+        window.APP_CLEAR_PERIOD = function () {
+          window.APP_PERIOD = { start: '', end: '' };
+          try { localStorage.removeItem(window.APP_PERIOD_STORAGE_KEY); } catch (e) {}
+          refreshNavLinks(window.APP_PERIOD);
+        };
+        document.addEventListener('DOMContentLoaded', function () { refreshNavLinks(window.APP_PERIOD); });
+      }());
     </script>
     <div class="app-shell">
       <aside class="app-sidebar" aria-label="Главное меню">

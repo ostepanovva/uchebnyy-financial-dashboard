@@ -373,6 +373,7 @@
   function dashboardNavigateWithPeriod_() {
     var dashboardStart = document.getElementById('dashboard-date-start').value || '';
     var dashboardEnd = document.getElementById('dashboard-date-end').value || '';
+    if (window.APP_SAVE_PERIOD) { window.APP_SAVE_PERIOD(dashboardStart, dashboardEnd); }
     var dashboardBaseUrl = window.APP_SCRIPT_URL;
     if (!dashboardBaseUrl) { dashboardLoad(); return; }
     var dashboardUrl = dashboardBaseUrl + '?page=dashboard';
@@ -397,6 +398,7 @@
 
   function dashboardReset() {
     document.getElementById('dashboard-filter-form').reset();
+    if (window.APP_CLEAR_PERIOD) { window.APP_CLEAR_PERIOD(); }
     var dashboardBaseUrl = window.APP_SCRIPT_URL;
     if (dashboardBaseUrl) { window.top.location.href = dashboardBaseUrl + '?page=dashboard'; return; }
     dashboardLoad();

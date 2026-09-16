@@ -309,7 +309,10 @@ function cashBuildDirections_(rows) {
     var cashKey = cashRow.direction || 'Без направления';
     cashGroups[cashKey] = (cashGroups[cashKey] || 0) + cashSignedAmount_(cashRow);
   });
-  return Object.keys(cashGroups).map(function (cashKey) { return { label: cashKey, value: cashGroups[cashKey] }; }).sort(function (a, b) { return Math.abs(b.value) - Math.abs(a.value); });
+  var cashTotal = Object.keys(cashGroups).reduce(function (cashSum, cashKey) { return cashSum + cashGroups[cashKey]; }, 0);
+  return Object.keys(cashGroups).map(function (cashKey) {
+    return { label: cashKey, value: cashGroups[cashKey], share: cashTotal ? cashGroups[cashKey] / cashTotal : 0 };
+  }).sort(function (a, b) { return Math.abs(b.value) - Math.abs(a.value); });
 }
 
 /** @param {Array<Object>} rows Rows. @param {Array<Object>} months Months. @return {Array<Object>} Chart items. @private */
