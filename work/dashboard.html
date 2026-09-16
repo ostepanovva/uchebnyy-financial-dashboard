@@ -1,7 +1,784 @@
-<section class="app-page-placeholder" aria-labelledby="dashboard-placeholder-title">
-  <div>
-    <p class="app-placeholder-eyebrow">Раздел 01</p>
-    <h2 id="dashboard-placeholder-title" class="app-placeholder-title">Финансовый дашборд</h2>
-    <p class="app-placeholder-text">Здесь появится сводная картина финансового состояния компании.</p>
-  </div>
+<style>
+  .dashboard-page {
+    --dashboard-aqua: #00d9ff;
+    --dashboard-teal: #22c5b7;
+    --dashboard-purple: #a78bfa;
+    --dashboard-red: #ff8793;
+    --dashboard-border: rgba(148, 163, 184, .16);
+    color: #f8fafc;
+    font-family: Manrope, Inter, Arial, sans-serif;
+  }
+
+  .dashboard-toolbar,
+  .dashboard-kpis,
+  .dashboard-charts {
+    display: grid;
+    gap: 16px;
+  }
+
+  .dashboard-toolbar {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    padding: 18px;
+    border: 1px solid var(--dashboard-border);
+    border-radius: 16px;
+    background: rgba(17, 28, 49, .78);
+  }
+
+  .dashboard-field { display: grid; gap: 7px; }
+
+  .dashboard-field label {
+    color: #91a0b9;
+    font: 700 10px/1 Inter, sans-serif;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-field input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--dashboard-border);
+    border-radius: 9px;
+    padding: 0 10px;
+    color: #e8f3f8;
+    background: #0c1629;
+    font: 500 13px Inter, sans-serif;
+    outline: 0;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .dashboard-field input:focus {
+    border-color: var(--dashboard-aqua);
+    box-shadow: 0 0 0 3px rgba(0, 217, 255, .16);
+  }
+
+  .dashboard-actions { display: flex; gap: 8px; }
+
+  .dashboard-btn {
+    height: 42px;
+    flex: 1;
+    border: 1px solid var(--dashboard-border);
+    border-radius: 9px;
+    padding: 0 14px;
+    color: #dbeafe;
+    background: #18253d;
+    cursor: pointer;
+    font: 700 12px Inter, sans-serif;
+    transition: border-color .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+
+  .dashboard-btn:hover { border-color: rgba(0, 217, 255, .5); color: var(--dashboard-aqua); }
+
+  .dashboard-btn-primary {
+    border-color: var(--dashboard-aqua);
+    color: #06141f;
+    background: var(--dashboard-aqua);
+    box-shadow: 0 0 18px rgba(0, 217, 255, .28);
+  }
+
+  .dashboard-btn-primary:hover { background: #67e8f9; border-color: #67e8f9; box-shadow: 0 0 22px rgba(103, 232, 249, .35); }
+
+  .dashboard-status { margin: 13px 0; color: #91a0b9; font: 500 12px Inter, sans-serif; }
+  .dashboard-status.dashboard-error { color: var(--dashboard-red); }
+
+  .dashboard-warning {
+    margin: 0 0 18px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 159, 28, .35);
+    border-radius: 12px;
+    background: rgba(255, 159, 28, .08);
+    color: #ffcf8a;
+    font: 600 12px/1.5 Inter, sans-serif;
+  }
+
+  .dashboard-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 18px; }
+
+  .dashboard-card,
+  .dashboard-chart {
+    border: 1px solid var(--dashboard-border);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(17, 28, 49, .94), rgba(17, 28, 49, .68));
+    padding: 20px;
+  }
+
+  .dashboard-card-label,
+  .dashboard-chart-title {
+    margin: 0;
+    color: #91a0b9;
+    font: 700 11px Inter, sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-card-value {
+    margin: 14px 0 4px;
+    font: 800 clamp(21px, 2.6vw, 30px)/1 Manrope, sans-serif;
+    letter-spacing: -.04em;
+  }
+
+  .dashboard-card-value-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin: 14px 0 4px;
+  }
+
+  .dashboard-card-value-row .dashboard-card-value { margin: 0; }
+
+  .dashboard-card-meta,
+  .dashboard-chart-subtitle {
+    margin: 5px 0 0;
+    color: #91a0b9;
+    font: 500 12px Inter, sans-serif;
+  }
+
+  .dashboard-card-meta.dashboard-error { color: var(--dashboard-red); }
+
+  .dashboard-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+  .dashboard-chart--wide { grid-column: span 2; }
+  .dashboard-chart-header { margin-bottom: 12px; }
+
+  .dashboard-svg { display: block; width: 100%; height: 260px; overflow: visible; }
+
+  .dashboard-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 13px;
+    margin-top: 10px;
+    color: #91a0b9;
+    font: 500 11px Inter, sans-serif;
+  }
+
+  .dashboard-legend i { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; background: var(--dashboard-aqua); }
+
+  .dashboard-empty { display: grid; min-height: 190px; place-items: center; color: #64748b; font: 600 12px Inter, sans-serif; }
+
+  .dashboard-positive { color: #68e2d2; }
+  .dashboard-negative { color: #ff9da5; }
+
+  .dashboard-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 8px;
+    font: 800 13px Inter, sans-serif;
+    vertical-align: middle;
+  }
+
+  .dashboard-trend-up { color: #34d399; }
+  .dashboard-trend-down { color: var(--dashboard-red); }
+  .dashboard-trend-flat { color: #91a0b9; }
+  /* Дни оборачиваемости — тот же кегль, что и основные KPI (включая ROE). */
+  .dashboard-card-value.dashboard-turnover-days { font-size: clamp(21px, 2.6vw, 30px) !important; }
+
+  @media (max-width: 1100px) {
+    .dashboard-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 720px) {
+    .dashboard-toolbar,
+    .dashboard-kpis,
+    .dashboard-charts { grid-template-columns: 1fr; }
+    .dashboard-chart--wide { grid-column: auto; }
+    .dashboard-svg { height: 230px; }
+  }
+</style>
+
+<section class="dashboard-page" aria-labelledby="dashboard-page-title">
+  <h2 id="dashboard-page-title" class="app-placeholder-title" style="display:none">Дэшборд</h2>
+
+  <form id="dashboard-filter-form" class="dashboard-toolbar" aria-label="Период дашборда">
+    <div class="dashboard-field">
+      <label for="dashboard-date-start">Начало периода</label>
+      <input id="dashboard-date-start" type="date">
+    </div>
+    <div class="dashboard-field">
+      <label for="dashboard-date-end">Показать на дату</label>
+      <input id="dashboard-date-end" type="date">
+    </div>
+    <div class="dashboard-field" style="grid-column: span 2;">
+      <label>&nbsp;</label>
+      <p style="margin:0;color:#91a0b9;font:500 12px Inter,sans-serif;">
+        Выберите начало и конец периода. Этот период передаётся на страницы «Деньги», «Капитал» и «Прибыль».
+      </p>
+    </div>
+    <div class="dashboard-actions">
+      <button class="dashboard-btn dashboard-btn-primary" type="submit">Применить</button>
+      <button id="dashboard-reset-btn" class="dashboard-btn" type="button">Сбросить</button>
+    </div>
+  </form>
+
+  <p id="dashboard-status" class="dashboard-status">Загружаем данные дашборда…</p>
+  <div id="dashboard-warning" class="dashboard-warning" style="display:none;"></div>
+
+  <section class="dashboard-kpis" aria-label="Ключевые показатели">
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Чистый денежный поток</p>
+      <p class="dashboard-card-value-row"><span id="dashboard-kpi-net-cash-flow" class="dashboard-card-value">—</span><span id="dashboard-kpi-net-cash-flow-trend" class="dashboard-trend"></span></p>
+      <p id="dashboard-kpi-net-cash-flow-meta" class="dashboard-card-meta">за период</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Cash Buffer</p>
+      <p id="dashboard-kpi-cash-buffer" class="dashboard-card-value">—</p>
+      <p id="dashboard-kpi-cash-buffer-meta" class="dashboard-card-meta">чистый денежный поток / среднедневной расход</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Коэфф. текущей ликвидности</p>
+      <p id="dashboard-kpi-current-ratio" class="dashboard-card-value">—</p>
+      <p class="dashboard-card-meta">Краткосрочные обязательства / оборотные активы · на дату среза</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Собственный капитал</p>
+      <p class="dashboard-card-value-row"><span id="dashboard-kpi-equity" class="dashboard-card-value">—</span><span id="dashboard-kpi-equity-trend" class="dashboard-trend"></span></p>
+      <p class="dashboard-card-meta">на дату среза</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Чистая прибыль</p>
+      <p class="dashboard-card-value-row"><span id="dashboard-kpi-net-profit" class="dashboard-card-value">—</span><span id="dashboard-kpi-net-profit-trend" class="dashboard-trend"></span></p>
+      <p class="dashboard-card-meta">Выручка минус разделы 2–5, плюс/минус 6–7</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Рентабельность по ЧП</p>
+      <p class="dashboard-card-value-row"><span id="dashboard-kpi-net-margin" class="dashboard-card-value">—</span><span id="dashboard-kpi-net-margin-trend" class="dashboard-trend"></span></p>
+      <p class="dashboard-card-meta">Чистая прибыль / выручка</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">MR по валовой прибыли</p>
+      <p id="dashboard-kpi-gross-margin" class="dashboard-card-value">—</p>
+      <p class="dashboard-card-meta">(Выручка − (Себестоимость + Общепроизв.)) / Выручка</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">ROE</p>
+      <p id="dashboard-kpi-roe" class="dashboard-card-value">—</p>
+      <p id="dashboard-kpi-roe-meta" class="dashboard-card-meta">Чистая прибыль / средний капитал</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Оборачиваемость ДЗ</p>
+      <p id="dashboard-kpi-ar-turnover" class="dashboard-card-value dashboard-turnover-days">—</p>
+      <p id="dashboard-kpi-ar-turnover-meta" class="dashboard-card-meta">Коэффициент: —</p>
+    </article>
+    <article class="dashboard-card">
+      <p class="dashboard-card-label">Оборачиваемость КЗ</p>
+      <p id="dashboard-kpi-ap-turnover" class="dashboard-card-value dashboard-turnover-days">—</p>
+      <p id="dashboard-kpi-ap-turnover-meta" class="dashboard-card-meta">Коэффициент: —</p>
+    </article>
+  </section>
+
+  <section class="dashboard-charts" aria-label="Диаграммы дашборда">
+    <article class="dashboard-chart dashboard-chart--wide">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Чистый денежный поток по месяцам</h3>
+        <p class="dashboard-chart-subtitle">приходы минус расходы, перемещения исключены</p>
+      </div>
+      <div id="dashboard-chart-cash-monthly"></div>
+    </article>
+
+    <article class="dashboard-chart dashboard-chart--wide">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Чистый денежный поток по месяцам по направлениям</h3>
+        <p class="dashboard-chart-subtitle">разбивка по столбцу «Направление»</p>
+      </div>
+      <div id="dashboard-chart-cash-by-direction"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Выручка и MR валовой прибыли</h3>
+        <p class="dashboard-chart-subtitle">столбцы — выручка, линия — MR, %</p>
+      </div>
+      <div id="dashboard-chart-revenue-margin"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Валовая прибыль по направлениям</h3>
+        <p class="dashboard-chart-subtitle">выручка − (себестоимость + общепроизводственные)</p>
+      </div>
+      <div id="dashboard-chart-gross-profit-direction"></div>
+    </article>
+
+    <article class="dashboard-chart dashboard-chart--wide">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Чистая прибыль и рентабельность по ЧП</h3>
+        <p class="dashboard-chart-subtitle">столбцы — чистая прибыль, линия — рентабельность, %</p>
+      </div>
+      <div id="dashboard-chart-net-profit-margin"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Динамика дебиторской задолженности</h3>
+        <p class="dashboard-chart-subtitle">по датам среза «Капитала»</p>
+      </div>
+      <div id="dashboard-chart-receivables"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Динамика кредиторской задолженности</h3>
+        <p class="dashboard-chart-subtitle">по датам среза «Капитала»</p>
+      </div>
+      <div id="dashboard-chart-payables"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Заемный и собственный капитал</h3>
+        <p class="dashboard-chart-subtitle">100% = Капитал + Обязательства, наведите на столбец для долей</p>
+      </div>
+      <div id="dashboard-chart-capital-mix"></div>
+    </article>
+
+    <article class="dashboard-chart">
+      <div class="dashboard-chart-header">
+        <h3 class="dashboard-chart-title">Коэффициент финансовой независимости</h3>
+        <p class="dashboard-chart-subtitle">расчёт как в KPI «Коэфф. текущей ликвидности»</p>
+      </div>
+      <div id="dashboard-chart-independence"></div>
+    </article>
+  </section>
 </section>
+
+<script>
+  var dashboardState = { data: null };
+
+  function dashboardInit() {
+    dashboardApplySharedPeriod_();
+    document.getElementById('dashboard-filter-form').addEventListener('submit', function (dashboardEvent) {
+      dashboardEvent.preventDefault();
+      dashboardNavigateWithPeriod_();
+    });
+    document.getElementById('dashboard-reset-btn').addEventListener('click', dashboardReset);
+    dashboardLoad();
+  }
+
+  // Прочитать период, выбранный на любой другой странице (?start=&end= в URL,
+  // прокинутые сюда через template.html -> window.APP_PERIOD), и подставить
+  // его в поля дашборда, если пользователь ещё не вводил свои значения.
+  function dashboardApplySharedPeriod_() {
+    var dashboardPeriod = window.APP_PERIOD;
+    if (!dashboardPeriod) { return; }
+    var dashboardStartInput = document.getElementById('dashboard-date-start');
+    var dashboardEndInput = document.getElementById('dashboard-date-end');
+    if (dashboardPeriod.start && !dashboardStartInput.value) { dashboardStartInput.value = dashboardPeriod.start; }
+    if (dashboardPeriod.end && !dashboardEndInput.value) { dashboardEndInput.value = dashboardPeriod.end; }
+  }
+
+  // "Применить" на Дашборде выполняет полный переход по ссылке
+  // .../exec?page=dashboard&start=...&end=..., поэтому выбранный период
+  // попадает в URL и, благодаря gstemplate.gs/template.html, автоматически
+  // подставляется на всех остальных страницах при переходе по навигации.
+  function dashboardNavigateWithPeriod_() {
+    var dashboardStart = document.getElementById('dashboard-date-start').value || '';
+    var dashboardEnd = document.getElementById('dashboard-date-end').value || '';
+    var dashboardBaseUrl = window.APP_SCRIPT_URL;
+    if (!dashboardBaseUrl) { dashboardLoad(); return; }
+    var dashboardUrl = dashboardBaseUrl + '?page=dashboard';
+    if (dashboardStart) { dashboardUrl += '&start=' + encodeURIComponent(dashboardStart); }
+    if (dashboardEnd) { dashboardUrl += '&end=' + encodeURIComponent(dashboardEnd); }
+    window.top.location.href = dashboardUrl;
+  }
+
+  function dashboardLoad() {
+    dashboardSetStatus('Загружаем данные дашборда…');
+    var dashboardParams = {
+      startDate: document.getElementById('dashboard-date-start').value || null,
+      endDate: document.getElementById('dashboard-date-end').value || null
+    };
+    google.script.run
+        .withSuccessHandler(dashboardReceive)
+        .withFailureHandler(function (dashboardError) {
+          dashboardSetStatus((dashboardError && dashboardError.message) || 'Не удалось получить данные.', 'error');
+        })
+        .apiDashboard(dashboardParams);
+  }
+
+  function dashboardReset() {
+    document.getElementById('dashboard-filter-form').reset();
+    var dashboardBaseUrl = window.APP_SCRIPT_URL;
+    if (dashboardBaseUrl) { window.top.location.href = dashboardBaseUrl + '?page=dashboard'; return; }
+    dashboardLoad();
+  }
+
+  function dashboardReceive(dashboardResponse) {
+    if (!dashboardResponse || dashboardResponse.status !== 'success') {
+      dashboardSetStatus((dashboardResponse && dashboardResponse.error) || 'Сервер вернул некорректный ответ.', 'error');
+      return;
+    }
+    dashboardState.data = dashboardResponse.data;
+    var dashboardMeta = dashboardResponse.data.meta || {};
+
+    if (!document.getElementById('dashboard-date-end').value && dashboardMeta.snapshotDate) {
+      document.getElementById('dashboard-date-end').value = dashboardMeta.snapshotDate;
+    }
+    if (!document.getElementById('dashboard-date-start').value && dashboardMeta.periodStart) {
+      document.getElementById('dashboard-date-start').value = dashboardMeta.periodStart;
+    }
+
+    var dashboardWarningBox = document.getElementById('dashboard-warning');
+    if (dashboardMeta.warning) {
+      dashboardWarningBox.textContent = dashboardMeta.warning;
+      dashboardWarningBox.style.display = 'block';
+    } else {
+      dashboardWarningBox.style.display = 'none';
+    }
+
+    dashboardRenderKpis(dashboardResponse.data.kpis, dashboardMeta);
+    dashboardRenderLine('dashboard-chart-cash-monthly', dashboardResponse.data.charts.cashMonthlyNetFlow, dashboardCompactMoney);
+    dashboardRenderStacked('dashboard-chart-cash-by-direction', dashboardResponse.data.charts.cashByDirection);
+    dashboardRenderColumnLine('dashboard-chart-revenue-margin', dashboardResponse.data.charts.revenueAndGrossMargin, 'revenue', 'grossMargin', dashboardCompactMoney, dashboardPercent);
+    dashboardRenderStacked('dashboard-chart-gross-profit-direction', dashboardResponse.data.charts.grossProfitByDirection);
+    dashboardRenderColumnLine('dashboard-chart-net-profit-margin', dashboardResponse.data.charts.netProfitAndMargin, 'netProfit', 'netMargin', dashboardCompactMoney, dashboardPercent);
+    dashboardRenderLabeledBars('dashboard-chart-receivables', dashboardResponse.data.charts.receivables);
+    dashboardRenderLabeledBars('dashboard-chart-payables', dashboardResponse.data.charts.payables);
+    dashboardRenderCapitalMix('dashboard-chart-capital-mix', dashboardResponse.data.charts.capitalMix);
+    dashboardRenderRatioLine('dashboard-chart-independence', dashboardResponse.data.charts.currentRatioTrend);
+
+    dashboardSetStatus(
+        'Дата среза капитала: ' + dashboardDisplayDate(dashboardMeta.snapshotDate) +
+        ' · Период отчета: ' + dashboardDisplayDate(dashboardMeta.periodStart) + ' — ' + dashboardDisplayDate(dashboardMeta.periodEnd) +
+        ' (' + (dashboardMeta.calendarDays || 0) + ' дн.)'
+    );
+  }
+
+  function dashboardRenderKpis(dashboardKpis, dashboardMeta) {
+    dashboardSetValueAndSign('dashboard-kpi-net-cash-flow', dashboardKpis.netCashFlow, dashboardMoney);
+    document.getElementById('dashboard-kpi-net-cash-flow-meta').textContent = 'за ' + (dashboardKpis.calendarDays || 0) + ' календ. дн.';
+
+    dashboardSetText('dashboard-kpi-cash-buffer', dashboardKpis.cashBufferDays === null ? '—' : dashboardNumber(dashboardKpis.cashBufferDays));
+    dashboardSetText('dashboard-kpi-cash-buffer-meta', dashboardKpis.cashBufferDays === null ? 'нужен денежный поток за период' : 'чистый денежный поток / среднедневной расход');
+    dashboardSetText('dashboard-kpi-current-ratio', dashboardKpis.currentRatio === null ? '—' : dashboardRatio(dashboardKpis.currentRatio));
+    dashboardSetValueAndSign('dashboard-kpi-equity', dashboardKpis.equity, dashboardMoney);
+    dashboardSetValueAndSign('dashboard-kpi-net-profit', dashboardKpis.netProfit, dashboardMoney);
+    dashboardSetText('dashboard-kpi-net-margin', dashboardKpis.netMargin === null ? '—' : dashboardPercent(dashboardKpis.netMargin));
+    dashboardSetText('dashboard-kpi-gross-margin', dashboardKpis.grossMargin === null ? '—' : dashboardPercent(dashboardKpis.grossMargin));
+
+    var dashboardTrends = dashboardKpis.trends || {};
+    dashboardRenderTrend_('dashboard-kpi-net-cash-flow-trend', dashboardTrends.netCashFlow);
+    dashboardRenderTrend_('dashboard-kpi-net-profit-trend', dashboardTrends.netProfit);
+    dashboardRenderTrend_('dashboard-kpi-net-margin-trend', dashboardTrends.netMargin);
+    dashboardRenderTrend_('dashboard-kpi-equity-trend', dashboardTrends.equity);
+
+    var dashboardRoe = dashboardKpis.roe || {};
+    if (dashboardRoe.error) {
+      dashboardSetText('dashboard-kpi-roe', '—');
+      dashboardSetErrorMeta('dashboard-kpi-roe-meta', dashboardRoe.error);
+    } else {
+      dashboardSetText('dashboard-kpi-roe', dashboardPercent(dashboardRoe.ratio));
+      dashboardSetNormalMeta('dashboard-kpi-roe-meta', 'Капитал на ' + dashboardDisplayDate(dashboardRoe.startDate) + ' и ' + dashboardDisplayDate(dashboardRoe.endDate));
+    }
+
+    var dashboardAr = dashboardKpis.receivablesTurnover || {};
+    if (dashboardAr.error) {
+      dashboardSetText('dashboard-kpi-ar-turnover', '—');
+      dashboardSetErrorMeta('dashboard-kpi-ar-turnover-meta', dashboardAr.error);
+    } else {
+      dashboardSetText('dashboard-kpi-ar-turnover', dashboardNumber(dashboardAr.days) + ' дн.');
+      dashboardSetNormalMeta('dashboard-kpi-ar-turnover-meta', 'Коэффициент: ' + dashboardRatio(dashboardAr.ratio) + ' раз · ДЗ на ' + dashboardDisplayDate(dashboardAr.startDate) + ' и ' + dashboardDisplayDate(dashboardAr.endDate));
+    }
+
+    var dashboardAp = dashboardKpis.payablesTurnover || {};
+    if (dashboardAp.error) {
+      dashboardSetText('dashboard-kpi-ap-turnover', '—');
+      dashboardSetErrorMeta('dashboard-kpi-ap-turnover-meta', dashboardAp.error);
+    } else {
+      dashboardSetText('dashboard-kpi-ap-turnover', dashboardNumber(dashboardAp.days) + ' дн.');
+      dashboardSetNormalMeta('dashboard-kpi-ap-turnover-meta', 'Коэффициент: ' + dashboardRatio(dashboardAp.ratio) + ' раз · КЗ на ' + dashboardDisplayDate(dashboardAp.startDate) + ' и ' + dashboardDisplayDate(dashboardAp.endDate));
+    }
+  }
+
+  function dashboardSetErrorMeta(dashboardId, dashboardText) {
+    var dashboardElement = document.getElementById(dashboardId);
+    dashboardElement.textContent = dashboardText;
+    dashboardElement.className = 'dashboard-card-meta dashboard-error';
+  }
+
+  function dashboardSetNormalMeta(dashboardId, dashboardText) {
+    var dashboardElement = document.getElementById(dashboardId);
+    dashboardElement.textContent = dashboardText;
+    dashboardElement.className = 'dashboard-card-meta';
+  }
+
+  function dashboardSetValueAndSign(dashboardId, dashboardValue, dashboardFormatter) {
+    var dashboardElement = document.getElementById(dashboardId);
+    dashboardElement.textContent = dashboardFormatter(dashboardValue);
+    dashboardElement.className = 'dashboard-card-value ' + dashboardSign(dashboardValue);
+  }
+
+  function dashboardSetText(dashboardId, dashboardText) { document.getElementById(dashboardId).textContent = dashboardText; }
+
+  // Подпись с динамикой относительно предыдущего месяца: зелёная стрелка
+  // вверх, если показатель вырос, красная вниз — если снизился.
+  function dashboardRenderTrend_(dashboardId, dashboardTrend) {
+    var dashboardElement = document.getElementById(dashboardId);
+    if (!dashboardElement) { return; }
+    if (!dashboardTrend || dashboardTrend.previous === null || typeof dashboardTrend.previous === 'undefined') {
+      dashboardElement.innerHTML = '';
+      dashboardElement.title = '';
+      return;
+    }
+    var dashboardArrow = '';
+    var dashboardClass = 'dashboard-trend';
+    if (dashboardTrend.direction === 'up') { dashboardArrow = '▲'; dashboardClass += ' dashboard-trend-up'; }
+    else if (dashboardTrend.direction === 'down') { dashboardArrow = '▼'; dashboardClass += ' dashboard-trend-down'; }
+    else { dashboardArrow = '●'; dashboardClass += ' dashboard-trend-flat'; }
+    dashboardElement.className = dashboardClass;
+    dashboardElement.textContent = dashboardArrow + (dashboardTrend.relative === null ? '' : ' ' + (dashboardTrend.relative >= 0 ? '+' : '') + dashboardPercent(dashboardTrend.relative));
+    dashboardElement.title = 'Изменение относительно предыдущего месяца (сопоставимый интервал).';
+  }
+
+
+  // ---------------------------------------------------------------------
+  // Charts (self-contained inline SVG, no external library — matches the
+  // money/profit/capital pages' approach)
+  // ---------------------------------------------------------------------
+
+  function dashboardRenderLine(dashboardId, dashboardItems, dashboardValueFormatter) {
+    var dashboardBox = document.getElementById(dashboardId);
+    if (!dashboardItems || !dashboardItems.length) { dashboardBox.innerHTML = '<div class="dashboard-empty">Нет данных для отображения</div>'; return; }
+    var dashboardValues = dashboardItems.map(function (dashboardItem) { return dashboardItem.value; });
+    var dashboardMin = Math.min.apply(null, dashboardValues.concat([0]));
+    var dashboardMax = Math.max.apply(null, dashboardValues.concat([0]));
+    var dashboardRange = dashboardMax - dashboardMin || 1;
+    var dashboardW = 680, dashboardH = 250, dashboardL = 30, dashboardR = 24, dashboardT = 30, dashboardB = 40;
+    var dashboardPlotH = dashboardH - dashboardT - dashboardB;
+    var dashboardBaseline = dashboardH - dashboardB - (0 - dashboardMin) / dashboardRange * dashboardPlotH;
+    var dashboardStep = (dashboardW - dashboardL - dashboardR) / Math.max(1, dashboardItems.length - 1);
+    var dashboardPoints = [];
+    var dashboardMarks = dashboardItems.map(function (dashboardItem, dashboardIndex) {
+      var dashboardX = dashboardL + dashboardIndex * dashboardStep;
+      var dashboardY = dashboardH - dashboardB - (dashboardItem.value - dashboardMin) / dashboardRange * dashboardPlotH;
+      dashboardPoints.push(dashboardX + ',' + dashboardY);
+      var dashboardLabelY = dashboardItem.value >= 0 ? Math.max(14, dashboardY - 11) : Math.min(dashboardH - dashboardB - 8, dashboardY + 18);
+      return '<g><title>' + dashboardEscape(dashboardItem.label) + ': ' + dashboardEscape(dashboardValueFormatter(dashboardItem.value)) + '</title>' +
+          '<circle cx="' + dashboardX + '" cy="' + dashboardY + '" r="4" fill="#00d9ff"/>' +
+          '<text x="' + dashboardX + '" y="' + dashboardLabelY + '" text-anchor="middle" fill="' + (dashboardItem.value < 0 ? '#ff9da5' : '#dffbff') + '" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="700">' + dashboardEscape(dashboardValueFormatter(dashboardItem.value)) + '</text>' +
+          '<text x="' + dashboardX + '" y="' + (dashboardH - 12) + '" text-anchor="middle" fill="#91a0b9" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600">' + dashboardEscape(dashboardItem.label) + '</text></g>';
+    }).join('');
+    dashboardBox.innerHTML = '<svg class="dashboard-svg" viewBox="0 0 ' + dashboardW + ' ' + dashboardH + '" role="img">' +
+        '<line x1="' + dashboardL + '" y1="' + dashboardBaseline + '" x2="' + (dashboardW - dashboardR) + '" y2="' + dashboardBaseline + '" stroke="#40506e"/>' +
+        '<polyline points="' + dashboardPoints.join(' ') + '" fill="none" stroke="#00d9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+        dashboardMarks + '</svg>';
+  }
+
+  function dashboardRenderRatioLine(dashboardId, dashboardItems) {
+    dashboardRenderLine(dashboardId, dashboardItems, dashboardRatio);
+  }
+
+  function dashboardRenderStacked(dashboardId, dashboardChart) {
+    var dashboardBox = document.getElementById(dashboardId);
+    var dashboardMonths = (dashboardChart && dashboardChart.months) || [];
+    var dashboardSeries = (dashboardChart && dashboardChart.series) || [];
+    if (!dashboardMonths.length || !dashboardSeries.length) { dashboardBox.innerHTML = '<div class="dashboard-empty">Нет данных для отображения</div>'; return; }
+    var dashboardColors = ['#00d9ff', '#22c5b7', '#a78bfa', '#ff9f1c', '#6d88b7', '#ff8793'];
+    var dashboardTotals = dashboardMonths.map(function (dashboardMonth, dashboardIndex) {
+      return dashboardSeries.reduce(function (dashboardSum, dashboardItem) { return dashboardSum + (Number(dashboardItem.values[dashboardIndex]) || 0); }, 0);
+    });
+    var dashboardMax = Math.max.apply(null, dashboardTotals.concat([0]));
+    var dashboardMin = Math.min.apply(null, dashboardTotals.concat([0]));
+    var dashboardRange = dashboardMax - dashboardMin || 1;
+    var dashboardW = 680, dashboardH = 260, dashboardL = 30, dashboardR = 24, dashboardT = 26, dashboardB = 42;
+    var dashboardPlotH = dashboardH - dashboardT - dashboardB;
+    var dashboardBaseline = dashboardH - dashboardB - (0 - dashboardMin) / dashboardRange * dashboardPlotH;
+    var dashboardStep = (dashboardW - dashboardL - dashboardR) / dashboardMonths.length;
+    var dashboardBarWidth = Math.min(64, dashboardStep * .62);
+    var dashboardBars = dashboardMonths.map(function (dashboardMonth, dashboardIndex) {
+      var dashboardCenter = dashboardL + dashboardStep * dashboardIndex + dashboardStep / 2;
+      var dashboardPositive = dashboardBaseline;
+      var dashboardNegative = dashboardBaseline;
+      var dashboardParts = dashboardSeries.map(function (dashboardItem, dashboardSeriesIndex) {
+        var dashboardValue = Number(dashboardItem.values[dashboardIndex]) || 0;
+        if (!dashboardValue) { return ''; }
+        var dashboardHeight = Math.abs(dashboardValue) / dashboardRange * dashboardPlotH;
+        var dashboardY;
+        if (dashboardValue >= 0) { dashboardY = dashboardPositive - dashboardHeight; dashboardPositive = dashboardY; }
+        else { dashboardY = dashboardNegative; dashboardNegative += dashboardHeight; }
+        return '<rect x="' + (dashboardCenter - dashboardBarWidth / 2) + '" y="' + dashboardY + '" width="' + dashboardBarWidth + '" height="' + Math.max(1, dashboardHeight) + '" rx="2" fill="' + dashboardColors[dashboardSeriesIndex % dashboardColors.length] + '"><title>' + dashboardEscape(dashboardItem.label) + ': ' + dashboardEscape(dashboardCompactMoney(dashboardValue)) + '</title></rect>';
+      }).join('');
+      return '<g>' + dashboardParts + '<text x="' + dashboardCenter + '" y="' + (dashboardH - 13) + '" text-anchor="middle" fill="#91a0b9" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="600">' + dashboardEscape(dashboardMonth.label) + '</text></g>';
+    }).join('');
+    dashboardBox.innerHTML = '<svg class="dashboard-svg" viewBox="0 0 ' + dashboardW + ' ' + dashboardH + '" role="img">' +
+        '<line x1="' + dashboardL + '" y1="' + dashboardBaseline + '" x2="' + (dashboardW - dashboardR) + '" y2="' + dashboardBaseline + '" stroke="#40506e"/>' + dashboardBars + '</svg>' +
+        '<div class="dashboard-legend">' + dashboardSeries.map(function (dashboardItem, dashboardIndex) {
+          return '<span><i style="background:' + dashboardColors[dashboardIndex % dashboardColors.length] + '"></i>' + dashboardEscape(dashboardItem.label) + '</span>';
+        }).join('') + '</div>';
+  }
+
+  function dashboardRenderColumnLine(dashboardId, dashboardItems, dashboardBarKey, dashboardLineKey, dashboardBarFormatter, dashboardLineFormatter) {
+    var dashboardBox = document.getElementById(dashboardId);
+    if (!dashboardItems || !dashboardItems.length) { dashboardBox.innerHTML = '<div class="dashboard-empty">Нет данных за выбранный период</div>'; return; }
+    var dashboardBars = dashboardItems.map(function (dashboardItem) { return Number(dashboardItem[dashboardBarKey]) || 0; });
+    var dashboardBarMin = Math.min.apply(null, dashboardBars.concat([0]));
+    var dashboardBarMax = Math.max.apply(null, dashboardBars.concat([0]));
+    var dashboardBarRange = dashboardBarMax - dashboardBarMin || 1;
+    var dashboardLines = dashboardItems.map(function (dashboardItem) { return Number(dashboardItem[dashboardLineKey]) || 0; });
+    var dashboardLineMin = Math.min.apply(null, dashboardLines.concat([0]));
+    var dashboardLineMax = Math.max.apply(null, dashboardLines.concat([0]));
+    var dashboardLineRange = dashboardLineMax - dashboardLineMin || 1;
+    var dashboardW = 680, dashboardH = 260, dashboardL = 32, dashboardR = 24, dashboardT = 34, dashboardB = 42;
+    var dashboardPlotH = dashboardH - dashboardT - dashboardB;
+    var dashboardBase = dashboardH - dashboardB - (0 - dashboardBarMin) / dashboardBarRange * dashboardPlotH;
+    var dashboardStep = (dashboardW - dashboardL - dashboardR) / dashboardItems.length;
+    var dashboardBarWidth = Math.min(52, dashboardStep * .56);
+    // Собираем позиции подписей столбцов и линии заранее, чтобы можно было
+    // раздвинуть их при пересечении (см. dashboardResolveLabelCollision_) —
+    // иначе подпись значения столбца и подпись % линии рисуются независимо
+    // друг от друга и на некоторых точках накладываются.
+    var dashboardMinLabelGap = 16;
+    var dashboardBarLabelYs = [];
+    var dashboardLineLabelYs = [];
+    var dashboardCenters = [];
+    var dashboardBarTops = [];
+    var dashboardBarHeights = [];
+    var dashboardLineYs = [];
+    dashboardItems.forEach(function (dashboardItem, dashboardIndex) {
+      var dashboardBar = Number(dashboardItem[dashboardBarKey]) || 0;
+      var dashboardLine = Number(dashboardItem[dashboardLineKey]) || 0;
+      var dashboardCenter = dashboardL + dashboardStep * dashboardIndex + dashboardStep / 2;
+      var dashboardY = dashboardH - dashboardB - (dashboardBar - dashboardBarMin) / dashboardBarRange * dashboardPlotH;
+      var dashboardTop = Math.min(dashboardY, dashboardBase);
+      var dashboardHeight = Math.max(2, Math.abs(dashboardBase - dashboardY));
+      var dashboardLineY = dashboardH - dashboardB - (dashboardLine - dashboardLineMin) / dashboardLineRange * dashboardPlotH;
+      dashboardCenters.push(dashboardCenter);
+      dashboardBarTops.push(dashboardTop);
+      dashboardBarHeights.push(dashboardHeight);
+      dashboardLineYs.push(dashboardLineY);
+      dashboardBarLabelYs.push(Math.max(14, dashboardTop - 8));
+      dashboardLineLabelYs.push(Math.max(13, dashboardLineY - 12));
+    });
+    // Если подпись линии оказалась слишком близко к подписи столбца в той же
+    // точке — поднимаем подпись линии выше минимум на dashboardMinLabelGap.
+    for (var dashboardLabelI = 0; dashboardLabelI < dashboardItems.length; dashboardLabelI++) {
+      if (Math.abs(dashboardLineLabelYs[dashboardLabelI] - dashboardBarLabelYs[dashboardLabelI]) < dashboardMinLabelGap) {
+        dashboardLineLabelYs[dashboardLabelI] = Math.max(12, Math.min(dashboardBarLabelYs[dashboardLabelI], dashboardLineLabelYs[dashboardLabelI]) - dashboardMinLabelGap);
+      }
+    }
+    var dashboardPoints = [];
+    var dashboardElements = dashboardItems.map(function (dashboardItem, dashboardIndex) {
+      var dashboardBar = Number(dashboardItem[dashboardBarKey]) || 0;
+      var dashboardLine = Number(dashboardItem[dashboardLineKey]) || 0;
+      var dashboardCenter = dashboardCenters[dashboardIndex];
+      var dashboardTop = dashboardBarTops[dashboardIndex];
+      var dashboardHeight = dashboardBarHeights[dashboardIndex];
+      dashboardPoints.push(dashboardCenter + ',' + dashboardLineYs[dashboardIndex]);
+      return '<g><title>' + dashboardEscape(dashboardItem.label) + ': ' + dashboardEscape(dashboardBarFormatter(dashboardBar)) + ', ' + dashboardEscape(dashboardLineFormatter(dashboardLine)) + '</title>' +
+          '<rect x="' + (dashboardCenter - dashboardBarWidth / 2) + '" y="' + dashboardTop + '" width="' + dashboardBarWidth + '" height="' + dashboardHeight + '" rx="4" fill="' + (dashboardBar < 0 ? '#ff8793' : '#00d9ff') + '" opacity=".88"/>' +
+          '<text x="' + dashboardCenter + '" y="' + dashboardBarLabelYs[dashboardIndex] + '" text-anchor="middle" fill="#dffbff" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="700">' + dashboardEscape(dashboardBarFormatter(dashboardBar)) + '</text>' +
+          '<text x="' + dashboardCenter + '" y="' + (dashboardH - 13) + '" text-anchor="middle" fill="#91a0b9" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="600">' + dashboardEscape(dashboardItem.label) + '</text></g>';
+    }).join('');
+    var dashboardLineMarks = dashboardItems.map(function (dashboardItem, dashboardIndex) {
+      var dashboardCenter = dashboardCenters[dashboardIndex];
+      var dashboardLine = Number(dashboardItem[dashboardLineKey]) || 0;
+      return '<g><circle cx="' + dashboardCenter + '" cy="' + dashboardLineYs[dashboardIndex] + '" r="3.5" fill="#a78bfa"/>' +
+          '<text x="' + dashboardCenter + '" y="' + dashboardLineLabelYs[dashboardIndex] + '" text-anchor="middle" fill="#d8b4fe" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="800">' + dashboardEscape(dashboardLineFormatter(dashboardLine)) + '</text></g>';
+    }).join('');
+    dashboardBox.innerHTML = '<svg class="dashboard-svg" viewBox="0 0 ' + dashboardW + ' ' + dashboardH + '" role="img">' +
+        '<line x1="' + dashboardL + '" y1="' + dashboardBase + '" x2="' + (dashboardW - dashboardR) + '" y2="' + dashboardBase + '" stroke="#40506e"/>' +
+        dashboardElements + '<polyline points="' + dashboardPoints.join(' ') + '" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + dashboardLineMarks + '</svg>' +
+        '<div class="dashboard-legend"><span><i style="background:#00d9ff"></i>значение (столбцы)</span><span><i style="background:#a78bfa"></i>% (линия, правая шкала)</span></div>';
+  }
+
+  function dashboardRenderLabeledBars(dashboardId, dashboardItems) {
+    var dashboardBox = document.getElementById(dashboardId);
+    if (!dashboardItems || !dashboardItems.length) { dashboardBox.innerHTML = '<div class="dashboard-empty">Нет данных за выбранный период</div>'; return; }
+    var dashboardValues = dashboardItems.map(function (dashboardItem) { return Number(dashboardItem.value) || 0; });
+    var dashboardMin = Math.min.apply(null, dashboardValues.concat([0]));
+    var dashboardMax = Math.max.apply(null, dashboardValues.concat([0]));
+    var dashboardRange = dashboardMax - dashboardMin || 1;
+    var dashboardW = 680, dashboardH = 250, dashboardL = 30, dashboardR = 24, dashboardT = 30, dashboardB = 40;
+    var dashboardPlotH = dashboardH - dashboardT - dashboardB;
+    var dashboardBaseline = dashboardH - dashboardB - (0 - dashboardMin) / dashboardRange * dashboardPlotH;
+    var dashboardStep = (dashboardW - dashboardL - dashboardR) / dashboardItems.length;
+    var dashboardBarWidth = Math.min(70, dashboardStep * .58);
+    var dashboardBars = dashboardItems.map(function (dashboardItem, dashboardIndex) {
+      var dashboardValue = Number(dashboardItem.value) || 0;
+      var dashboardCenter = dashboardL + dashboardStep * dashboardIndex + dashboardStep / 2;
+      var dashboardY = dashboardH - dashboardB - (dashboardValue - dashboardMin) / dashboardRange * dashboardPlotH;
+      var dashboardTop = Math.min(dashboardY, dashboardBaseline);
+      var dashboardHeight = Math.max(2, Math.abs(dashboardBaseline - dashboardY));
+      var dashboardLabelY = dashboardValue >= 0 ? Math.max(14, dashboardTop - 8) : Math.min(dashboardH - dashboardB - 6, dashboardTop + dashboardHeight + 15);
+      return '<g><title>' + dashboardEscape(dashboardItem.label) + ': ' + dashboardEscape(dashboardCompactMoney(dashboardValue)) + '</title>' +
+          '<rect x="' + (dashboardCenter - dashboardBarWidth / 2) + '" y="' + dashboardTop + '" width="' + dashboardBarWidth + '" height="' + dashboardHeight + '" rx="4" fill="' + (dashboardValue < 0 ? '#ff8793' : '#22c5b7') + '" opacity=".9"/>' +
+          '<text x="' + dashboardCenter + '" y="' + dashboardLabelY + '" text-anchor="middle" fill="#dffbff" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="700">' + dashboardEscape(dashboardCompactMoney(dashboardValue)) + '</text>' +
+          '<text x="' + dashboardCenter + '" y="' + (dashboardH - 12) + '" text-anchor="middle" fill="#91a0b9" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="600">' + dashboardEscape(dashboardItem.label) + '</text></g>';
+    }).join('');
+    dashboardBox.innerHTML = '<svg class="dashboard-svg" viewBox="0 0 ' + dashboardW + ' ' + dashboardH + '" role="img">' +
+        '<line x1="' + dashboardL + '" y1="' + dashboardBaseline + '" x2="' + (dashboardW - dashboardR) + '" y2="' + dashboardBaseline + '" stroke="#40506e"/>' + dashboardBars + '</svg>';
+  }
+
+  function dashboardRenderCapitalMix(dashboardId, dashboardItems) {
+    var dashboardBox = document.getElementById(dashboardId);
+    if (!dashboardItems || !dashboardItems.length) { dashboardBox.innerHTML = '<div class="dashboard-empty">Нет данных для отображения</div>'; return; }
+    var dashboardW = 680, dashboardH = 260, dashboardL = 30, dashboardR = 24, dashboardT = 24, dashboardB = 42;
+    var dashboardPlotH = dashboardH - dashboardT - dashboardB;
+    var dashboardStep = (dashboardW - dashboardL - dashboardR) / dashboardItems.length;
+    var dashboardBarWidth = Math.min(64, dashboardStep * .6);
+    var dashboardBars = dashboardItems.map(function (dashboardItem, dashboardIndex) {
+      var dashboardCenter = dashboardL + dashboardStep * dashboardIndex + dashboardStep / 2;
+      var dashboardEquityShare = Math.max(0, Math.min(1, Number(dashboardItem.equityShare) || 0));
+      var dashboardDebtShare = Math.max(0, Math.min(1, Number(dashboardItem.debtShare) || 0));
+      var dashboardEquityHeight = dashboardEquityShare * dashboardPlotH;
+      var dashboardDebtHeight = dashboardDebtShare * dashboardPlotH;
+      var dashboardEquityY = dashboardH - dashboardB - dashboardEquityHeight;
+      return '<g>' +
+          '<rect x="' + (dashboardCenter - dashboardBarWidth / 2) + '" y="' + dashboardEquityY + '" width="' + dashboardBarWidth + '" height="' + dashboardEquityHeight + '" rx="3" fill="#22d3ee"><title>Капитал: ' + dashboardEscape(dashboardCompactMoney(dashboardItem.equity)) + ' · ' + dashboardEscape(dashboardPercent(dashboardEquityShare)) + '</title></rect>' +
+          '<rect x="' + (dashboardCenter - dashboardBarWidth / 2) + '" y="' + (dashboardEquityY - dashboardDebtHeight) + '" width="' + dashboardBarWidth + '" height="' + dashboardDebtHeight + '" rx="3" fill="#a78bfa"><title>Обязательства: ' + dashboardEscape(dashboardCompactMoney(dashboardItem.debt)) + ' · ' + dashboardEscape(dashboardPercent(dashboardDebtShare)) + '</title></rect>' +
+          '<text x="' + dashboardCenter + '" y="' + Math.max(14, dashboardEquityY - dashboardDebtHeight - 8) + '" text-anchor="middle" fill="#e2e8f0" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="700">' + dashboardEscape(dashboardPercent(dashboardEquityShare)) + '</text>' +
+          '<text x="' + dashboardCenter + '" y="' + (dashboardH - 13) + '" text-anchor="middle" fill="#91a0b9" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="600">' + dashboardEscape(dashboardItem.label) + '</text></g>';
+    }).join('');
+    dashboardBox.innerHTML = '<svg class="dashboard-svg" viewBox="0 0 ' + dashboardW + ' ' + dashboardH + '" role="img"><line x1="' + dashboardL + '" y1="' + (dashboardH - dashboardB) + '" x2="' + (dashboardW - dashboardR) + '" y2="' + (dashboardH - dashboardB) + '" stroke="#40506e"/>' + dashboardBars + '</svg>' +
+        '<div class="dashboard-legend"><span><i style="background:#22d3ee"></i>Капитал</span><span><i style="background:#a78bfa"></i>Обязательства</span></div>';
+  }
+
+  // ---------------------------------------------------------------------
+  // Formatting helpers — per the task, chart labels always use one unified
+  // format (млн руб. / %), shared by cards, tables and charts.
+  // ---------------------------------------------------------------------
+
+  function dashboardMoney(dashboardValue) {
+    return dashboardCompactMoney(dashboardValue);
+  }
+
+  function dashboardCompactMoney(dashboardValue) {
+    var dashboardMillions = (Number(dashboardValue) || 0) / 1000000;
+    return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(dashboardMillions) + ' млн руб.';
+  }
+
+  function dashboardPercent(dashboardValue) {
+    return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 }).format((Number(dashboardValue) || 0) * 100) + '%';
+  }
+
+  function dashboardRatio(dashboardValue) {
+    return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(Number(dashboardValue) || 0);
+  }
+
+  function dashboardNumber(dashboardValue) {
+    return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 }).format(Number(dashboardValue) || 0);
+  }
+
+  function dashboardSign(dashboardValue) {
+    return Number(dashboardValue) < 0 ? 'dashboard-negative' : Number(dashboardValue) > 0 ? 'dashboard-positive' : '';
+  }
+
+  function dashboardDisplayDate(dashboardIsoDate) {
+    if (!dashboardIsoDate) { return '—'; }
+    var dashboardParts = String(dashboardIsoDate).split('-');
+    return dashboardParts.length === 3 ? dashboardParts[2] + '.' + dashboardParts[1] + '.' + dashboardParts[0] : dashboardIsoDate;
+  }
+
+  function dashboardSetStatus(dashboardText, dashboardType) {
+    var dashboardElement = document.getElementById('dashboard-status');
+    dashboardElement.textContent = dashboardText;
+    dashboardElement.className = 'dashboard-status ' + (dashboardType === 'error' ? 'dashboard-error' : '');
+  }
+
+  function dashboardEscape(dashboardValue) {
+    return String(dashboardValue === null || dashboardValue === undefined ? '' : dashboardValue).replace(/[&<>'"]/g, function (dashboardChar) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[dashboardChar];
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', dashboardInit);
+</script>

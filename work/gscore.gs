@@ -462,13 +462,21 @@ function apiMoney(params) {
 }
 
 /**
- * API contract stub for the capital module.
+ * Unified API entry point for the capital module.
  *
- * @param {Object=} params Module parameters reserved for future use.
+ * @param {Object=} params Capital page period parameters.
  * @return {{status: string, data: Object|null, error: string|null}} API response.
  */
 function apiCapital(params) {
-  return createModuleStubResponse_('capital', params);
+  try {
+    if (typeof capitalGetCapitalData !== 'function') {
+      return createErrorResponse('Модуль «Капитал» не подключен. Проверьте файл gscapital.gs.');
+    }
+    return prepareResponse(capitalGetCapitalData(params));
+  } catch (error) {
+    logError(error);
+    return createErrorResponse(error);
+  }
 }
 
 /**
@@ -490,13 +498,21 @@ function apiProfit(params) {
 }
 
 /**
- * API contract stub for the dashboard module.
+ * API endpoint for the dashboard module.
  *
- * @param {Object=} params Module parameters reserved for future use.
+ * @param {Object=} params Dashboard filter parameters.
  * @return {{status: string, data: Object|null, error: string|null}} API response.
  */
 function apiDashboard(params) {
-  return createModuleStubResponse_('dashboard', params);
+  try {
+    if (typeof dashboardGetDashboardData !== 'function') {
+      return createErrorResponse('Модуль «Дэшборд» не подключен. Проверьте файл gsdashboard.gs.');
+    }
+    return prepareResponse(dashboardGetDashboardData(params));
+  } catch (error) {
+    logError(error);
+    return createErrorResponse(error);
+  }
 }
 
 /**

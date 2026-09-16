@@ -20,6 +20,12 @@ var PROFIT_SECTION_CODES = {
   OTHER_EXPENSES: '7.расходынижеоперационнойприбыли'
 };
 
+// Раздел 8 ("Расходы ниже чистой прибыли", напр. дивиденды) намеренно
+// хранится отдельно от PROFIT_SECTION_CODES: он не должен попадать в
+// чистую прибыль/рентабельность по ЧП, но должен быть виден отдельным
+// показателем — иначе он молча исчезает из сводных данных.
+var PROFIT_BELOW_NET_PROFIT_SECTION_CODE = '8.расходынижечистойприбыли';
+
 /**
  * Public API called from profit.html through google.script.run.
  * @param {Object=} params Date period and page filters.
@@ -316,6 +322,7 @@ function profitBuildKpis_(rows) {
       (profitSectionKey_(profitRow.section) === PROFIT_SECTION_CODES.COMMERCIAL || profitSectionKey_(profitRow.section) === PROFIT_SECTION_CODES.ADMINISTRATIVE);
   }).reduce(function (profitSum, profitRow) { return profitSum + Math.abs(profitRow.amount); }, 0);
   var profitNet = profitNetProfit_(rows);
+  var profitBelowNetProfit = profitSumSection_(rows, PROFIT_BELOW_NET_PROFIT_SECTION_CODE);
   return {
     revenue: profitRevenue,
     cost: profitCost,
@@ -323,12 +330,15 @@ function profitBuildKpis_(rows) {
     grossMargin: profitRatio_(profitGross, profitRevenue),
     fixedCostShare: profitRatio_(profitFixedExpenses, profitAllExpenses),
     netProfit: profitNet,
-    netMargin: profitRatio_(profitNet, profitRevenue)
+    netMargin: profitRatio_(profitNet, profitRevenue),
+    // Раздел 8 ОПиУ. Показывается отдельным KPI и намеренно не входит
+    // в netProfit/netMargin выше (см. PROFIT_BELOW_NET_PROFIT_SECTION_CODE).
+    belowNetProfitExpenses: profitBelowNetProfit
   };
 }
 
 /** @return {Object} Empty KPI object. @private */
-function profitEmptyKpis_() { return { revenue: 0, cost: 0, costShare: 0, grossMargin: 0, fixedCostShare: 0, netProfit: 0, netMargin: 0 }; }
+function profitEmptyKpis_() { return { revenue: 0, cost: 0, costShare: 0, grossMargin: 0, fixedCostShare: 0, netProfit: 0, netMargin: 0, belowNetProfitExpenses: 0 }; }
 /** @return {Object} Empty chart object. @private */
 function profitEmptyCharts_() { return { revenueAndGrossMargin: [], revenueByDirection: { months: [], series: [] }, grossProfitByDirection: { months: [], series: [] }, netProfitAndMargin: [] }; }
 

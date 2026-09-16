@@ -136,12 +136,29 @@ function cashValueByHeader_(row, index, header) {
 function cashHeaderKey_(value) { return cashString_(value).toLowerCase().replace(/\s+/g, ' '); }
 /** @param {*} value Value. @return {string} String without surrounding whitespace. @private */
 function cashString_(value) { return value === null || typeof value === 'undefined' ? '' : String(value).trim(); }
-/** @param {*} value Number. @return {number} Finite number. @private */
-function cashNumber_(value) { return typeof value === 'number' && isFinite(value) ? value : 0; }
+/** @param {*} value Number, possibly text ("-2 231,00", "1 234,56 ₽"). @return {number} Finite number. @private */
+function cashNumber_(value) {
+  if (typeof value === 'number') { return isFinite(value) ? value : 0; }
+  if (typeof value !== 'string') { return 0; }
+  var cashText = value.replace(/[\s\u00A0]/g, '').replace(/₽/g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+  var cashParsed = Number(cashText);
+  return isFinite(cashParsed) ? cashParsed : 0;
+}
 
-/** @param {*} value Date input. @return {Date|null} Strictly parsed date. @private */
+/** @return {string} Script time zone, matching gsprofit.gs/gscapital.gs. @private */
+function cashTimeZone_() { return Session.getScriptTimeZone() || 'Etc/GMT'; }
+
+/**
+ * Parses a spreadsheet date without letting the script's execution time zone
+ * shift the calendar day (aligned with profitParseLocalDate_/capitalParseDate_
+ * so all three modules agree on which day a given row belongs to).
+ * @param {*} value Date input. @return {Date|null} Strictly parsed date. @private */
 function cashParseDate_(value) {
-  if (value instanceof Date) { return isNaN(value.getTime()) ? null : new Date(value.getTime()); }
+  if (value instanceof Date) {
+    if (isNaN(value.getTime())) { return null; }
+    var cashIsoText = Utilities.formatDate(value, cashTimeZone_(), 'yyyy-MM-dd');
+    return cashValidatedDate_(+cashIsoText.substring(0, 4), +cashIsoText.substring(5, 7), +cashIsoText.substring(8, 10));
+  }
   if (typeof value !== 'string') { return null; }
   var cashInput = value.trim();
   var cashMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cashInput);
@@ -228,7 +245,12 @@ function cashFormatIsoDate_(date) { return date.getFullYear() + '-' + ('0' + (da
 function cashBuildKpis_(rows, range) {
   var cashFlowRows = rows.filter(function (cashRow) { return cashHasOperation_(cashRow, 'Приход') || cashHasOperation_(cashRow, 'Расход'); });
   var cashNet = cashFlowRows.reduce(function (cashSum, cashRow) { return cashSum + cashSignedAmount_(cashRow); }, 0);
-  var cashExpense = cashFlowRows.filter(function (cashRow) { return cashHasOperation_(cashRow, 'Расход'); }).reduce(function (cashSum, cashRow) { return cashSum + Math.abs(cashRow.amount); }, 0);
+  var cashOperatingFlowRows = cashFlowRows.filter(function (cashRow) { return cashActivityType_(cashRow) === 'operating'; });
+  var cashOperatingExpense = cashOperatingFlowRows.filter(function (cashRow) { return cashHasOperation_(cashRow, 'Расход'); }).reduce(function (cashSum, cashRow) { return cashSum + cashSignedAmount_(cashRow); }, 0);
+  // Остатки не суммируются по месяцам: для Cash Buffer нужен итог по всем
+  // счетам на последнюю доступную дату остатка в выбранном периоде.
+  var cashEndingBalance = cashEndingBalance_(rows, range.endDate);
+  var cashBalance = cashEndingBalance.value;
   var cashDays = range.startDate && range.endDate ? Math.floor((new Date(range.endDate.getFullYear(), range.endDate.getMonth(), range.endDate.getDate()) - new Date(range.startDate.getFullYear(), range.startDate.getMonth(), range.startDate.getDate())) / 86400000) + 1 : 0;
   var cashSections = [
     { key: 'operating', label: 'Основная деятельность' },
@@ -238,7 +260,33 @@ function cashBuildKpis_(rows, range) {
     var cashValue = cashFlowRows.filter(function (cashRow) { return cashActivityType_(cashRow) === cashItem.key; }).reduce(function (cashSum, cashRow) { return cashSum + cashSignedAmount_(cashRow); }, 0);
     return { key: cashItem.key, label: cashItem.label, value: cashValue, share: cashNet ? cashValue / cashNet : 0 };
   });
-  return { netCashFlow: cashNet, cashBufferDays: cashExpense && cashDays ? cashNet / (cashExpense / cashDays) : null, calendarDays: cashDays, sectionFlow: cashSections };
+  var cashAverageDailyExpense = cashDays ? Math.abs(cashOperatingExpense) / cashDays : null;
+  var cashBufferDays = cashAverageDailyExpense ? Math.abs(cashBalance / cashAverageDailyExpense) : null;
+  Logger.log('[Деньги][CashBuffer] Расход с видом операции «Расход»: ' + cashOperatingExpense + '; среднедневной расход: ' + cashAverageDailyExpense + '; чистый денежный поток на ' + (cashEndingBalance.date ? cashFormatIsoDate_(cashEndingBalance.date) : 'нет даты') + ': ' + cashBalance + '; Cash Buffer = |чистый поток / среднедневной расход| = ' + cashBufferDays + '; строк остатка: ' + cashEndingBalance.count);
+  return { netCashFlow: cashNet, cashBufferDays: cashBufferDays, cashBufferBalanceDate: cashEndingBalance.date ? cashFormatIsoDate_(cashEndingBalance.date) : null, calendarDays: cashDays, sectionFlow: cashSections };
+}
+
+/** @param {Array<Object>} rows Cash rows. @param {Date|null} end Period end. @return {{value:number|null,date:Date|null,count:number}} Last balance snapshot. @private */
+function cashEndingBalance_(rows, end) {
+  var cashBalanceRows = rows.filter(function (cashRow) {
+    return cashHasOperation_(cashRow, 'Остаток') && cashRow.date && (!end || cashRow.date.getTime() <= end.getTime());
+  });
+  if (!cashBalanceRows.length) {
+    var cashFallback = rows.filter(function (cashRow) {
+      return cashRow.date && (!end || cashRow.date.getTime() <= end.getTime());
+    }).reduce(function (cashSum, cashRow) { return cashSum + cashSignedAmount_(cashRow); }, 0);
+    Logger.log('[Деньги][CashBuffer] В источнике нет отдельных строк остатка; использован накопленный остаток операций: ' + cashFallback);
+    return { value: cashFallback, date: end ? new Date(end.getTime()) : null, count: 0 };
+  }
+  var cashBalanceDate = cashBalanceRows.reduce(function (cashLatest, cashRow) {
+    return cashRow.date.getTime() > cashLatest.getTime() ? cashRow.date : cashLatest;
+  }, cashBalanceRows[0].date);
+  var cashRowsAtEnd = cashBalanceRows.filter(function (cashRow) { return cashRow.date.getTime() === cashBalanceDate.getTime(); });
+  return {
+    value: cashRowsAtEnd.reduce(function (cashSum, cashRow) { return cashSum + cashSignedAmount_(cashRow); }, 0),
+    date: new Date(cashBalanceDate.getTime()),
+    count: cashRowsAtEnd.length
+  };
 }
 
 /** @param {Array<Object>} rows Rows. @param {string} operation Operation. @return {Array<Object>} Chart items. @private */

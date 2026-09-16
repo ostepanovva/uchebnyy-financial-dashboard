@@ -35,9 +35,30 @@ function doGet(e) {
   var route = getRoute_(e);
   var template = HtmlService.createTemplateFromFile('template');
 
+  // Apps Script serves the page from a temporary googleusercontent.com
+  // sandbox URL, not from the .../exec address in the browser bar. Relative
+  // links (href="?page=...") resolve against that sandbox URL and silently
+  // break navigation, so every link must be built from the real, stable
+  // web-app URL instead.
+  template.scriptUrl = ScriptApp.getService().getUrl();
   template.currentPage = route.id;
   template.pageTitle = route.title;
   template.pageFile = route.file;
+
+  // The period picked on the Дэшборд page is carried forward as ?start=&end=
+  // query params (see gsdashboard.gs / dashboard.html) so every other page
+  // opens pre-filtered to the same period. periodQuery is pre-built here
+  // (already URL-encoded) and appended, via <?= ?>, to every nav link in
+  // template.html — the auto-escaping there turns its "&" into "&amp;",
+  // which is what a literal "&" must look like inside an href attribute.
+  var periodStart = e && e.parameter && typeof e.parameter.start === 'string' ? e.parameter.start.trim() : '';
+  var periodEnd = e && e.parameter && typeof e.parameter.end === 'string' ? e.parameter.end.trim() : '';
+  var periodQuery = '';
+  if (periodStart) { periodQuery += '&start=' + encodeURIComponent(periodStart); }
+  if (periodEnd) { periodQuery += '&end=' + encodeURIComponent(periodEnd); }
+  template.periodStart = periodStart;
+  template.periodEnd = periodEnd;
+  template.periodQuery = periodQuery;
 
   return template
       .evaluate()
